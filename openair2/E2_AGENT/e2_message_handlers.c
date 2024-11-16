@@ -294,6 +294,8 @@ UeListM* get_ue_list(){
     if(num_ues == 0){
         return ue_list_m;
     }
+    float prbs_ul = 0;
+    float prbs_dl = 0;
     NR_UE_info_t* curr_ue;
     // build list of ue_info_m
     UeInfoM** ue_info_list;
@@ -324,14 +326,36 @@ UeListM* get_ue_list(){
 
         ue_info_list[i]->has_avg_prbs_dl = 1;
         ue_info_list[i]->avg_prbs_dl = curr_ue->avg_prbs_dl;
+        prbs_dl += curr_ue->avg_prbs_dl;
 
-        ue_info_list[i]->has_mcs = 1;
-        ue_info_list[i]->mcs = curr_ue->UE_sched_ctrl.sched_pdsch.mcs;
+        ue_info_list[i]->has_avg_prbs_ul = 1;
+        ue_info_list[i]->avg_prbs_ul = curr_ue->avg_prbs_ul;
+        prbs_ul += curr_ue->avg_prbs_ul;
+
+        ue_info_list[i]->has_mcs_dl = 1;
+        ue_info_list[i]->mcs_dl = curr_ue->UE_sched_ctrl.sched_pdsch.mcs;
+ 
+        ue_info_list[i]->has_mcs_ul = 1;
+        ue_info_list[i]->mcs_ul = curr_ue->UE_sched_ctrl.sched_pusch.mcs; //For MCS uplink
+
+        ue_info_list[i]->has_dl_bler = 1;
+        ue_info_list[i]->dl_bler = curr_ue->UE_sched_ctrl.dl_bler_stats.bler; // downlink BLER(BER)
+
+        ue_info_list[i]->has_ul_bler= 1;
+        ue_info_list[i]->ul_bler = curr_ue->UE_sched_ctrl.ul_bler_stats.bler; // Uplink BLER (BER)
+
+        ue_info_list[i]->has_rsrp= 1;
+        ue_info_list[i]->rsrp = curr_ue->mac_stats.num_rsrp_meas > 0 ? curr_ue->mac_stats.cumul_rsrp/ curr_ue->mac_stats.num_rsrp_meas :0; 
 
         ue_info_list[i]->has_avg_tbs_per_prb_dl = 1;
         ue_info_list[i]->avg_tbs_per_prb_dl = curr_ue->avg_tbs_per_prb_dl;
 
     }
+    ue_list_m->has_cell_load_ul=1;
+    ue_list_m->cell_load_ul = prbs_ul / 106;
+
+    ue_list_m->has_cell_load_dl = 1;
+    ue_list_m->cell_load_dl = prbs_dl / 106;
     // add a null terminator to the list
     ue_info_list[num_ues] = NULL;
     // assgin ue info pointer
